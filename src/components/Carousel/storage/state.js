@@ -10,7 +10,7 @@ export let stateClone = {
         sliderReference.style.transition = `${duration}ms linear left`;
     },
 
-    change(direction, by, to) {
+    animatableChange(direction, by, to) {
 
         this.__beforeChange();
 
@@ -30,9 +30,25 @@ export let stateClone = {
         setTimeout(
             this.__afterChange, this.duration
         )
+
     },
 
     __afterChange() {
         sliderReference.style.transition = '0ms linear left';
+    },
+
+    secretelyChange(direction, by, to){
+        let demandedPosition = this.position + (direction * by);
+        demandedPosition = to ? to : demandedPosition;
+
+        let newPosition = (demandedPosition < 0 || demandedPosition > this.maxRight) ?
+            (demandedPosition < 0 ? 0 : this.maxRight) : demandedPosition;
+
+        this.shiftBy = newPosition - this.position;
+        this.position = newPosition
+
+        if (shiftBy !== 0){
+            rootComponentState({ position: this.position });
+        }
     }
 }
