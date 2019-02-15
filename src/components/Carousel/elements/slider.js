@@ -3,9 +3,6 @@ import { array } from 'prop-types';
 import defaultClasses from './slidercss';
 import classify from '../../../classify';
 import Column from './column.js';
-import { validatedProps } from '../root';
-import { references } from '../root';
-
 
 class Slider extends Component {
 
@@ -19,7 +16,7 @@ class Slider extends Component {
     }
 
     getContent() {
-        let { renderableColumns, id } = this.props;
+        let { renderableColumns, id, validatedProps } = this.props;
         let { columns } = validatedProps.sliders[id];
 
         return renderableColumns.map((singleColumn, columnIndex) => {
@@ -36,18 +33,36 @@ class Slider extends Component {
     }
 
     componentDidMount() {
+        let { references } = this.props;
         references.sliderReference=this;
         references.sliderNodeRefs.push(this.sliderNode);
     }
 
     render() {
+        let { validatedProps, actions, references } = this.props;
         let { position, id } = this.props;
         let { columns } = validatedProps.sliders[id];
+
+        let sliderRef = this.sliderNode;
+        let initialCssPosition = (100/columns)*-position;
+        let singleShift = 100/columns;
 
         return (
             <ul ref={this.sliderNode}
                 style={{left: `${ (100/columns)*-position }%`}}
-                className={'slider'}>
+                className={'slider'}
+                
+                onTouchMove={e => {
+                    actions.onSwipeProgressHandler(e);
+                }}
+
+                onTouchStart={e => {
+                    actions.onSwipeStartHandler(e, sliderRef, initialCssPosition, singleShift);
+                }}
+
+                onTouchEnd={e => {
+                    actions.onSwipeEndHandler(e);
+                }}>
                 {this.getContent()}
             </ul>
         )

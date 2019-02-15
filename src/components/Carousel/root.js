@@ -5,14 +5,8 @@ import classify from '../../classify';
 import Slider from './elements/slider';
 import { arrayOperations } from './libraries/arrayOperations';
 import { propsValidation } from './libraries/propsValidation';
-import { ValidatedProps } from './storage/props';
-import { StateClone } from './storage/state';
-import { References } from './storage/references';
-import { actions } from './libraries/actions';
 
-export let validatedProps = new ValidatedProps();
-export let references = new References();
-export let stateClone = new StateClone();
+import provider from './storage/provider';
 
 class Root extends Component {
     constructor(props) {
@@ -22,25 +16,31 @@ class Root extends Component {
             renderableColumns: null
         };
         this.validateProps();
-        this.onButtonClick = actions.onButtonClick.bind(this)
+        this.rootNode = React.createRef();
     }
 
     componentWillMount() {
         this.props.__focusify__SET_ME_AS__controlledComponent(this);
-        references.rootReference = this;
+        this.props.references.rootReference = this;
+    }
+
+    componentDidMount(){
+        this.props.references.rootNode = this.rootNode;
     }
 
     validateProps() {
         let { sliders, settings } = this.props;
-        validatedProps.settings.duration = settings.duration;
+        this.props.validatedProps.settings.duration = settings.duration;
+        this.props.validatedProps.maxFullScreen = sliders[0].columns;
+        this.props.validatedProps.leftOverflow = sliders[0].columns;
         if (sliders.length > 1) {
             let leftOverflow = sliders.map((slider) => {
                 return slider.columns
             }).sort((a, b) => {
                 return b - a;
             })
-            validatedProps.leftOverflow = leftOverflow[0];
-            validatedProps.maxFullScreen = leftOverflow[sliders.length - 1];
+            this.props.validatedProps.leftOverflow = leftOverflow[0];
+            this.props.validatedProps.maxFullScreen = leftOverflow[sliders.length - 1];
         }
 
         for (let i = 0; i < sliders.length; i++) {
@@ -51,37 +51,43 @@ class Root extends Component {
     validatePropsForEverySlider(config, idx) {
         let items = config.items;
         let rowsAmount = config.rows && config.rows !== 0 ? config.rows : 1;
-        validatedProps.sliders[idx] = {};
-        validatedProps.sliders[idx].columns = config.columns;
-        validatedProps.sliders[idx].rows = idx > 0 ? 1 : rowsAmount;
-        validatedProps.sliders[idx].slider = propsValidation.isSlider(
+        this.props.validatedProps.sliders[idx] = {};
+        this.props.validatedProps.sliders[idx].columns = config.columns;
+        this.props.validatedProps.sliders[idx].rows = idx > 0 ? 1 : rowsAmount;
+        this.props.validatedProps.sliders[idx].slider = propsValidation.isSlider(
             items, config.columns, config.rows
         );
-        validatedProps.sliders[idx].infinite = propsValidation.isInfinite(
-            validatedProps.sliders[idx].slider, config.infinite
+        this.props.validatedProps.sliders[idx].infinite = propsValidation.isInfinite(
+            this.props.validatedProps.sliders[idx].slider, config.infinite
         );
-        let { columns, rows, infinite } = validatedProps.sliders[idx];
+        let { rows, infinite } = this.props.validatedProps.sliders[idx];
         let minFullViewsAmount = infinite ? 3 : null;
-        let validItems = arrayOperations.itemsAmountValidator(items, validatedProps.leftOverflow, rows, minFullViewsAmount);
+        let validItems = arrayOperations.itemsAmountValidator(items, this.props.validatedProps.leftOverflow, rows, minFullViewsAmount);
         let validColumns = arrayOperations.columnsArrayCreator(validItems, rows);
         if (infinite) {
-            validColumns = arrayOperations.columnsArrayRebuild(validColumns, validColumns.length - validatedProps.leftOverflow);
+            validColumns = arrayOperations.columnsArrayRebuild(validColumns, validColumns.length - this.props.validatedProps.leftOverflow);
         }
-        validatedProps.sliders[idx].validColumns = validColumns;
-        this.state.position = infinite ? validatedProps.leftOverflow : 0;
+        this.props.validatedProps.sliders[idx].validColumns = validColumns;
+        this.state.position = infinite ? this.props.validatedProps.leftOverflow : 0;
 
-        stateClone.position = this.state.position;
-        stateClone.maxRight = validColumns.length - validatedProps.leftOverflow;
+        this.props.stateClone.position = this.state.position;
+        this.props.stateClone.maxRight = validColumns.length - this.props.validatedProps.leftOverflow;
     }
 
     getContent() {
-        return validatedProps.sliders.map((config, idx) => {
+        let {validatedProps, references, stateClone, actions} = this.props;
+        return this.props.validatedProps.sliders.map((config, idx) => {
             return (
                 <Slider
                     key={idx}
                     id={idx}
                     renderableColumns={config.validColumns}
                     position={this.state.position}
+
+                    validatedProps={validatedProps}
+                    references={references}
+                    stateClone={stateClone}
+                    actions={actions}
                 />
             )
         })
@@ -90,11 +96,13 @@ class Root extends Component {
     render() {
         return (
             <div>
-                <div className={'wrapper'}>
+                <div
+                    ref={this.rootNode} 
+                    className={'wrapper'}>
                     {this.getContent()}
                 </div>
-                <button onClick={() => this.onButtonClick(-1)}>Left</button>
-                <button onClick={() => this.onButtonClick(1)}>Right</button>
+                <button onClick={() => this.props.actions.onButtonClick(-1)}>Left</button>
+                <button onClick={() => this.props.actions.onButtonClick(1)}>Right</button>
             </div>
         )
     }
@@ -112,5 +120,4 @@ class Root extends Component {
     }
 }
 
-
-export default focusify(classify(defaultClasses)(Root));
+export default provider(focusify(classify(defaultClasses)(Root)));

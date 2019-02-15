@@ -1,31 +1,44 @@
-import { rootComponentState } from './../root';
-import { validatedProps } from './../root';
-import { references } from './../root';
+
+import { arrayOperations } from './../libraries/arrayOperations';
 
 export class StateClone {
+    constructor(context){
+        this.context = context;
+        this.__afterChange = this.__afterChange.bind(this);
+    }
 
     animatableChangeState(direction, by, to) {
         this.__beforeChange();
         this.__changeState(direction, by, to);
+        let its = this;
         setTimeout(
-            this.__afterChange, validatedProps.settings.duration
+            its.__afterChange, its.context.validatedProps.settings.duration
         )
 
     }
 
     secretelyChangeState(direction, by, to) {
-        this.__changeState(direction, by, to);
+        if (by===false){
+            by = to - this.context.validatedProps.maxFullScreen;
+            direction = 1;
+        }
+        let sliceIndex = direction * by;
+        this.context.validatedProps.sliders.forEach((slider, idx)=>{
+            slider.validColumns = arrayOperations.columnsArrayRebuild(slider.validColumns, sliceIndex)
+        })
+    
+        this.__changeState(false, false, this.context.validatedProps.maxFullScreen);
     }
 
     __beforeChange() {
-        let duration = validatedProps.settings.duration;
-        references.sliderNodeRefs.forEach((node)=>{
+        let duration = this.context.validatedProps.settings.duration;
+        this.context.references.sliderNodeRefs.forEach((node)=>{
             node.current.style.transition = `${duration}ms linear left`;
         })
     }
 
     __afterChange() {
-        references.sliderNodeRefs.forEach((node)=>{
+        this.context.references.sliderNodeRefs.forEach((node)=>{
             node.current.style.transition = `0ms linear left`;
         })
     }
@@ -41,7 +54,9 @@ export class StateClone {
         this.position = newPosition
 
         if (this.shiftBy !== 0) {
-            references.rootReference.changePosition({ position: this.position });
+            this.context.references.rootReference.changePosition({ position: this.position });
+        } else {
+            this.context.actions.adjustSlider(); 
         }
     }
 }

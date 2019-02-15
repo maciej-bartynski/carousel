@@ -18,7 +18,7 @@ class App extends Component {
         columns: 1,
         rows: 1,
         slider: true,
-        infinite: true,
+        infinite: false,
         navigators: true,
         transitionProperty: 'left',
         transitionTiming: 'linear',
@@ -29,7 +29,18 @@ class App extends Component {
         columns: 3,
         rows: 2,
         slider: true,
-        infinite: true,
+        infinite: false,
+        navigators: true,
+        transitionProperty: 'left',
+        transitionTiming: 'linear',
+        transitionStart: 'none',
+        transitionEnd: 'none',
+      },{
+        items: sad2,
+        columns: 5,
+        rows: 2,
+        slider: true,
+        infinite: false,
         navigators: true,
         transitionProperty: 'left',
         transitionTiming: 'linear',
@@ -46,21 +57,10 @@ class App extends Component {
 
       sliders: [{
         items: sad,
-        columns: 1,
+        columns: 2,
         rows: 1,
         slider: true,
-        infinite: true,
-        navigators: true,
-        transitionProperty: 'left',
-        transitionTiming: 'linear',
-        transitionStart: 'none',
-        transitionEnd: 'none',
-      },{
-        items: sad2,
-        columns: 3,
-        rows: 2,
-        slider: true,
-        infinite: true,
+        infinite: false,
         navigators: true,
         transitionProperty: 'left',
         transitionTiming: 'linear',
@@ -72,13 +72,20 @@ class App extends Component {
     return (
 
       <div style={{ margin: '0 auto', width: '70%' }}>
-  <Carousel {...config2} />
-        <Carousel {...config} />
-
         <Carousel {...config2} />
-
+        <Carousel {...config} />
+        <Carousel {...config2} hoistMyContext ={ (x)=>this.cont=x } />
+        <button onClick={
+          ()=>this.goTo(4)
+        }>special</button>
       </div>
     );
+  }
+
+
+
+  componentDidMount(){
+    this.goTo = this.cont.actions.onColumnClick;
   }
 }
 

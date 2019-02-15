@@ -9,6 +9,7 @@ export default styled.div`
         padding: 0;
         list-style: none;
         white-space: nowrap;
+        will-change: left;
     }
 
     .column {
