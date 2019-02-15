@@ -1,0 +1,67 @@
+.btnsContainer {
+    position: absolute;
+    top: calc(50%);
+    left: 0;
+    width: 100%;
+}
+
+.btn {
+    font-size: 0;
+    width: 40px;
+    height: 70px;
+    display: block;
+    position: relative;
+    top: -35px;
+}
+
+.btn::after {
+    position: absolute;
+    top: 50%;
+    margin-top: -20px;
+    left: 0;
+    display: block;
+    content: '';
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    background-color: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.22);
+    transition: opacity ease-in 0.15s, background-color ease-in 0.15s,
+        box-shadow ease-in 0.15s;
+    backface-visibility: hidden;
+    -webkit-transition-property: left, right;
+    -moz-transition-property: left, right;
+    -o-transition-property: left, right;
+    transition-property: left, right;
+    -webkit-transition-duration: 0.1s;
+    -moz-transition-duration: 0.1s;
+    -o-transition-duration: 0.1s;
+    transition-duration: 0.1s;
+    font-family: Rajdhani, 'Helvetica Neue', Verdana, Arial, sans-serif;
+    -ms-touch-action: manipulation;
+    touch-action: manipulation;
+}
+
+.btn:hover:after {
+    background-color: rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.22);
+}
+
+.btnLeft {
+    composes: btn;
+    position: absolute;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.btnRight {
+    composes: btn;
+    position: absolute;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
