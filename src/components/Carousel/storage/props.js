@@ -1,11 +1,7 @@
-export let validatedProps = {
-    leftOverflow: 0,
-    
-    settings: {
-        duration: 200
-    },
-
-    sliders: [
-       
-    ]
+export class ValidatedProps {
+    constructor() {
+        this.leftOverflow = 0;
+        this.settings = { duration: 200 };
+        this.sliders = [];
+    }
 }

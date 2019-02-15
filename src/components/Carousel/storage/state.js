@@ -1,43 +1,36 @@
 import { rootComponentState } from './../root';
-import { validateProps } from './props';
+import { validatedProps } from './../root';
+import { references } from './../root';
 
-export let stateClone = {
-    position: 0,
-    maxRight: validateProps.sliders[0].validColumns.length - validateProps.sliders[0].validColumns.leftOverflow,
-    duration: validateProps.settings.duration,
+export class StateClone {
 
-    __beforeChange() {
-        sliderReference.style.transition = `${duration}ms linear left`;
-    },
-
-    animatableChange(direction, by, to) {
-
+    animatableChangeState(direction, by, to) {
         this.__beforeChange();
-
-        let demandedPosition = this.position + (direction * by);
-        demandedPosition = to ? to : demandedPosition;
-
-        let newPosition = (demandedPosition < 0 || demandedPosition > this.maxRight) ?
-            (demandedPosition < 0 ? 0 : this.maxRight) : demandedPosition;
-
-        this.shiftBy = newPosition - this.position;
-        this.position = newPosition
-
-        if (shiftBy !== 0){
-            rootComponentState({ position: this.position });
-        }
-
+        this.__changeState(direction, by, to);
         setTimeout(
-            this.__afterChange, this.duration
+            this.__afterChange, validatedProps.settings.duration
         )
 
-    },
+    }
+
+    secretelyChangeState(direction, by, to) {
+        this.__changeState(direction, by, to);
+    }
+
+    __beforeChange() {
+        let duration = validatedProps.settings.duration;
+        references.sliderNodeRefs.forEach((node)=>{
+            node.current.style.transition = `${duration}ms linear left`;
+        })
+    }
 
     __afterChange() {
-        sliderReference.style.transition = '0ms linear left';
-    },
+        references.sliderNodeRefs.forEach((node)=>{
+            node.current.style.transition = `0ms linear left`;
+        })
+    }
 
-    secretelyChange(direction, by, to){
+    __changeState(direction, by, to) {
         let demandedPosition = this.position + (direction * by);
         demandedPosition = to ? to : demandedPosition;
 
@@ -47,8 +40,8 @@ export let stateClone = {
         this.shiftBy = newPosition - this.position;
         this.position = newPosition
 
-        if (shiftBy !== 0){
-            rootComponentState({ position: this.position });
+        if (this.shiftBy !== 0) {
+            references.rootReference.changePosition({ position: this.position });
         }
     }
 }

@@ -5,7 +5,14 @@ import classify from '../../classify';
 import Slider from './elements/slider';
 import { arrayOperations } from './libraries/arrayOperations';
 import { propsValidation } from './libraries/propsValidation';
-import { validatedProps } from './storage/props';
+import { ValidatedProps } from './storage/props';
+import { StateClone } from './storage/state';
+import { References } from './storage/references';
+import { actions } from './libraries/actions';
+
+export let validatedProps = new ValidatedProps();
+export let references = new References();
+export let stateClone = new StateClone();
 
 class Root extends Component {
     constructor(props) {
@@ -15,10 +22,12 @@ class Root extends Component {
             renderableColumns: null
         };
         this.validateProps();
+        this.onButtonClick = actions.onButtonClick.bind(this)
     }
 
     componentWillMount() {
         this.props.__focusify__SET_ME_AS__controlledComponent(this);
+        references.rootReference = this;
     }
 
     validateProps() {
@@ -29,8 +38,9 @@ class Root extends Component {
                 return slider.columns
             }).sort((a, b) => {
                 return b - a;
-            })[0]
-            validatedProps.leftOverflow = leftOverflow;
+            })
+            validatedProps.leftOverflow = leftOverflow[0];
+            validatedProps.maxFullScreen = leftOverflow[sliders.length - 1];
         }
 
         for (let i = 0; i < sliders.length; i++) {
@@ -59,6 +69,9 @@ class Root extends Component {
         }
         validatedProps.sliders[idx].validColumns = validColumns;
         this.state.position = infinite ? validatedProps.leftOverflow : 0;
+
+        stateClone.position = this.state.position;
+        stateClone.maxRight = validColumns.length - validatedProps.leftOverflow;
     }
 
     getContent() {
@@ -76,13 +89,17 @@ class Root extends Component {
 
     render() {
         return (
-            <div className={'wrapper'}>
-                {this.getContent()}
+            <div>
+                <div className={'wrapper'}>
+                    {this.getContent()}
+                </div>
+                <button onClick={() => this.onButtonClick(-1)}>Left</button>
+                <button onClick={() => this.onButtonClick(1)}>Right</button>
             </div>
         )
     }
 
-    changePosition(payload){
+    changePosition(payload) {
         this.setState(payload);
     }
 
@@ -97,4 +114,3 @@ class Root extends Component {
 
 
 export default focusify(classify(defaultClasses)(Root));
-export let rootComponentState = Root.changePosition ;
