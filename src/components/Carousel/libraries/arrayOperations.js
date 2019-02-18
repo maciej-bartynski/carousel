@@ -12,7 +12,7 @@ arrayOperations.itemsAmountValidator = (items, visibleColumns, rowsAmount, minFu
      * edition not required
      */
     if (items.length >= gridCellsAmount) return items;
-
+   
     /**
      * edit array to provide
      * enough items for slide 

@@ -1,32 +1,34 @@
-
-export class Actions  {
-    constructor(context){
+export class Actions {
+    constructor(context) {
         this.context = context;
         this.onButtonClick = this.onButtonClick.bind(this);
         this.onColumnClick = this.onColumnClick.bind(this);
         this.onSwipeEndHandler = this.onSwipeEndHandler.bind(this);
         this.onSwipeProgressHandler = this.onSwipeProgressHandler.bind(this);
-        this.onSwipeStartHandler = this.onSwipeStartHandler.bind(this)
+        this.onSwipeStartHandler = this.onSwipeStartHandler.bind(this);
+        
     }
 
-    onButtonClick(dir){ 
-        let by = this.context.validatedProps.maxFullScreen;
-        let infinite = this.context.validatedProps.sliders[0].infinite;
-        this.context.stateClone.animatableChangeState(dir, by);
-        if(!infinite) return;
+    onButtonClick(dir) {
+        let by = this.context.propsClone.settings.maxFullScreen;
+        let infinite = this.context.propsClone.settings.infinite;
+        this.context.stateClone.animatableChangePosition(dir, by);
+
+        if (!infinite) return;
         let its = this;
         setTimeout(
-            ()=>its.context.stateClone.secretelyChangeState(dir, by), its.context.validatedProps.settings.duration
+            () => its.context.stateClone.secretelyChangePosition(dir, by), its.context.propsClone.settings.duration
         )
     }
 
-    onColumnClick(to){
-        let infinite = this.context.validatedProps.sliders[0].infinite;
-        this.context.stateClone.animatableChangeState(false, false, to);
-        if(!infinite) return;
+    onColumnClick(to) { 
+        let infinite = this.context.propsClone.settings.infinite;
+        
+        this.context.stateClone.animatableChangePosition(false, false, to);
+        if (!infinite) return;
         let its = this;
-        setTimeout(
-            ()=>its.context.stateClone.secretelyChangeState(false, false, to), its.context.validatedProps.settings.duration
+        setTimeout( 
+            () => {its.context.stateClone.secretelyChangePosition(1, false, to)}, its.context.propsClone.settings.duration
         )
     }
 
@@ -35,22 +37,22 @@ export class Actions  {
         let dx = end - this.swipeX;
         let sign = Math.sign(dx);
         let percentDx = Math.floor(100 / (this.wrapperWidth / dx));
-        let howMuchCols = Math.ceil(percentDx / this.singleShift);    
-        let infinite = this.context.validatedProps.sliders[0].infinite;
-       
-        if( (this.context.references.rootReference.state.position - howMuchCols) < 0 ||
-            (this.context.references.rootReference.state.position - howMuchCols) > this.context.stateClone.maxRight){
+        let howMuchCols = Math.ceil(percentDx / this.singleShift);
+        let infinite = this.context.propsClone.sliders[0].infinite;
+
+        if ((this.context.references.rootReference.state.position - howMuchCols) < 0 ||
+            (this.context.references.rootReference.state.position - howMuchCols) > this.context.stateClone.maxRight) {
             this.adjustSlider();
             return;
         }
-        if( howMuchCols === 0){
+        if (howMuchCols === 0) {
             howMuchCols = 1;
         }
         this.context.stateClone.animatableChangeState(-sign, Math.abs(howMuchCols));
-        if(!infinite) return;
+        if (!infinite) return;
         let its = this;
         setTimeout(
-            ()=>its.context.stateClone.secretelyChangeState(-sign, Math.abs(howMuchCols)), its.context.validatedProps.settings.duration
+            () => its.context.stateClone.secretelyChangeState(-sign, Math.abs(howMuchCols)), its.context.propsClone.settings.duration
         )
     }
 
@@ -59,8 +61,8 @@ export class Actions  {
     }
 
     onSwipeStartHandler(e, sliderRef, initialCssPosition, singleShift) {
-        this.singleShift=singleShift;
-        this.initialCssPosition=initialCssPosition;
+        this.singleShift = singleShift;
+        this.initialCssPosition = initialCssPosition;
         this.sliderRef = sliderRef;
         let wrapperWidth = this.context.references.rootNode.current.getBoundingClientRect();
         this.wrapperWidth = wrapperWidth.left + wrapperWidth.right;
@@ -76,7 +78,7 @@ export class Actions  {
         this.isSwipingOrNot += 1;
     }
 
-    adjustSlider(){ console.log('asdfasdfasdfasdfasdfasdfasdfkkkkk')
+    adjustSlider() {
         this.sliderRef.current.style.left = this.initialCssPosition + '%';
     }
 }
