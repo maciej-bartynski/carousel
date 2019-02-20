@@ -3,31 +3,59 @@ import defaultClasses from './slidercss';
 import classify from '../../../classify';
 import Column from './column.js';
 import { array, string, shape } from 'prop-types';
+import { ClickOrSwipe } from './../storage/clickOrSwipe';
 
 class Slider extends Component {
 
     static propTypes = {
-        renderableColumns: array.isRequired,
         classes: shape({
             column: string,
             slider: string
         })
     }
 
-    constructor(props){
+    constructor(props) {
         super(props);
         this.sliderNode = React.createRef();
+        this.dispatchClick = false;
+        this.onClickHandler = this.onClickHandler.bind(this);
+    }
+
+    componentDidMount() {
+        let { references, clickOrSwipe, id } = this.props;
+        references.sliderContextRefs.push(this);
+        references.sliderNodeRefs.push(this.sliderNode);
+        clickOrSwipe.context = this;
+        clickOrSwipe.sliderNode = this.sliderNode;
+        clickOrSwipe.sliderId = id;
+    }
+
+    componentWillUnmount() {
+        let { references, id } = this.props;
+        references.sliderContextRefs[id] = null;
+        references.sliderNodeRefs[id] = null;
+    }
+
+    componentDidUpdate() {
+        let { references, id, clickOrSwipe } = this.props;
+        references.sliderContextRefs[id] = this;
+        references.sliderNodeRefs[id] = this.sliderNode;
+        clickOrSwipe.context = this;
+        clickOrSwipe.sliderNode = this.sliderNode;
+        clickOrSwipe.sliderId = id;
     }
 
     getContent() {
-        let { renderableColumns, id, propsClone } = this.props;
-        let { columns } = propsClone.sliders[id];
+        let { id, propsClone, references } = this.props;
+        let { validColumns, shiftBy } = propsClone.sliders[id];
         let { classes } = this.props;
 
-        return renderableColumns.map((singleColumn, columnIndex) => {
+        return validColumns.map((singleColumn, columnIndex) => {
             return (
-                <li key={columnIndex}
-                    style={{ width: `${100/columns}%`}}
+                <li
+                    onClick={() => this.onClickHandler(columnIndex)}
+                    key={columnIndex}
+                    style={{ width: `${shiftBy}%` }}
                     className={'column'}>
                     <Column
                         singleColumn={singleColumn}
@@ -37,37 +65,64 @@ class Slider extends Component {
         })
     }
 
-    componentDidMount() {
-        let { references } = this.props;
-        references.sliderReference = this;
-        references.sliderNodeRefs.push(this.sliderNode);
+    onClickHandler(to) {
+        let { actions, propsClone, id } = this.props;
+        if (!this.dispatchClick) return;
+        if (!propsClone.sliders[id].columnNavi) return;
+        actions.onShiftTo(to);
+        this.dispatchClick = false;
     }
 
     render() {
-        let { propsClone, actions } = this.props;
-        let { position, id } = this.props;
-        let { columns } = propsClone.sliders[id];
-
-        let sliderRef = this.sliderNode;
-        let initialCssPosition = (100/columns)*-position;
-        let singleShift = 100/columns;
-
+        let { propsClone, id, clickOrSwipe } = this.props;
+        let { initialPosition, shiftBy } = propsClone.sliders[id];
         let { classes } = this.props;
+
         return (
             <ul ref={this.sliderNode}
-                style={{left: `${ (100/columns)*-position }%`}}
+                style={{ left: `${shiftBy * -initialPosition}%` }}
                 className={'slider'}
-                
+
+                onMouseEnter={
+                    e => {
+                        clickOrSwipe.onMouseEnter(e)
+                    }
+                }
+
+                onMouseLeave={
+                    e => {
+                        clickOrSwipe.onMouseLeave(e);
+                    }
+                }
+
+                onMouseDown={
+                    e => {
+                        clickOrSwipe.onMouseDown(e)
+                    }
+                }
+
+                onMouseUp={
+                    e => {
+                        clickOrSwipe.onMouseUp(e)
+                    }
+                }
+
+                onMouseMove={
+                    e => {
+                        clickOrSwipe.onMouseMove(e)
+                    }
+                }
+
                 onTouchMove={e => {
-                    actions.onSwipeProgressHandler(e);
+                    clickOrSwipe.onSwipeProgress(e);
                 }}
 
                 onTouchStart={e => {
-                    actions.onSwipeStartHandler(e, initialCssPosition);
+                    clickOrSwipe.onSwipeStart(e);
                 }}
 
                 onTouchEnd={e => {
-                    actions.onSwipeEndHandler(e);
+                    clickOrSwipe.onSwipeEnd(e);
                 }}>
                 {this.getContent()}
             </ul>

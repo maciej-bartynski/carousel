@@ -1,81 +1,113 @@
-
-import { arrayOperations } from './../libraries/arrayOperations';
+import { arrayOperations } from '../libraries/arrayOperations';
 
 export class StateClone {
     constructor(context) {
         this.context = context;
-        this.__afterChange = this.__afterChange.bind(this);
+        this.currentRootPosition = null;
+        this.demandedColumnIndex = null;
+        this.sliceIndex = null;
 
-        this.position = 0;
-        this.maxRight = [];
-        this.individualPositions = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+        this.setSliceIndex = this.setSliceIndex.bind(this);
+        this.resetSliderIfInfinite = this.resetSliderIfInfinite.bind(this);
+        this.demandColumnIndex = this.demandColumnIndex.bind(this);
+        this.setCurrentRootPosition = this.setCurrentRootPosition.bind(this);
+        this.adjustSliderToIndividualPosition = this.adjustSliderToIndividualPosition.bind(this);
+        this.animatablyAdjustAllSlidersToIndividualPositions = this.animatablyAdjustAllSlidersToIndividualPositions.bind(this);
+        this.__afterChange = this.__afterChange.bind(this);
+        this.__beforeChange = this.__beforeChange.bind(this);
+    };
+
+    setSliceIndex(sliderData) {
+        let borderIndex = this.context.propsClone.settings.leftOverflow;
+        this.sliceIndex = this.currentRootPosition - borderIndex;
+        this.sliceIndex = Math.sign(this.sliceIndex) < 0 ?
+            sliderData.validColumns.length + this.sliceIndex : this.sliceIndex;
+        console.log(this.currentRootPosition)
     }
 
-    animatableChangePosition(direction, by, to) {
-        let { sliders } = this.context.propsClone;
-        let { maxRigthForBiggestSlider } = this.context.propsClone.settings;
-        let { sliderNodeRefs } = this.context.references;
-        this.demandPositionForAllSliders(direction, by, to, maxRigthForBiggestSlider );
-        this.__beforeChange();
-        sliders.forEach((slider, idx) => {
-            let singleSliderPosition = this.calculateValidPositionForEachSlider(this.maxRight[idx], idx);
-            this.changePosition(singleSliderPosition, slider, sliderNodeRefs[idx]);
+    resetSliderIfInfinite() {
+        console.log(this.context.propsClone.sliders)
+        this.context.propsClone.sliders.forEach((sliderData, idx)=>{
+            let sliderNode = this.context.references.sliderNodeRefs[idx];
+            this.setSliceIndex(sliderData);
+            let newValidatedColumns = arrayOperations.columnsArrayRebuild(sliderData.validColumns, this.sliceIndex);
+            sliderData.validColumns = newValidatedColumns;
+            sliderNode.current.style.left = sliderData.shiftBy * -sliderData.initialPosition + '%';
         })
+        this.currentRootPosition = this.context.propsClone.settings.leftOverflow ;
+    }
+
+    demandColumnIndex(direction, by, to) {
+
+        if (direction === null && by !== null) {
+            console.log('Direction must be settled');
+            return;
+        }
+
+        if (by !== null) {
+            this.demandedColumnIndex = this.currentRootPosition + (by * direction);
+            return;
+        }
+
+        this.demandedColumnIndex = to;
+    }
+
+    setCurrentRootPosition() {
+        let max = this.context.propsClone.settings.maxRightPosition;
+        let min = 0;
+
+        let setPosition = (this.demandedColumnIndex > max || this.demandedColumnIndex < min) ?
+            (this.demandedColumnIndex > max) ? max : min : this.demandedColumnIndex;
+
+        this.currentRootPosition = setPosition;
+    }
+
+    adjustSliderToIndividualPosition(proposedColumnIndex, sliderNode, sliderData) {
+
+        if (!sliderData.slider) return;
+
+        let max = sliderData.individualMaxRight;
+        let min = 0;
+
+        let setPosition = (proposedColumnIndex > max || proposedColumnIndex < min) ?
+            (proposedColumnIndex > max) ? max : min : proposedColumnIndex;
+
+        sliderData.individualCurrenPosition = setPosition;
+        sliderNode.current.style.left = setPosition * -sliderData.shiftBy + '%';
+    }
+
+    animatablyAdjustAllSlidersToIndividualPositions() {
+        
+        this.context.references.sliderNodeRefs.forEach((sliderNode, idx) => {
+            this.__beforeChange(sliderNode);
+            let sliderData = this.context.propsClone.sliders[idx];
+            this.adjustSliderToIndividualPosition(this.currentRootPosition, sliderNode, sliderData);
+        })
+
+        
+
         let its = this;
         setTimeout(
-            its.__afterChange, its.context.propsClone.settings.duration
-        )
+            () => {
+                its.__afterChange()
+                if (!its.context.propsClone.settings.infinite) return;
+                its.resetSliderIfInfinite();
+                its.context.references.provider.setState({
+                    propsClone: this.context.propsClone
+                })
+            },
+            its.context.propsClone.settings.duration
+        );
     }
 
-    demandPositionForAllSliders(direction, by, to, maxRigthForBiggestSlider ) {
-        let demandedPosition = this.position + (direction * by);
-        demandedPosition = to ? to : demandedPosition;
-       
-        demandedPosition = (demandedPosition < 0 || demandedPosition >  maxRigthForBiggestSlider) ?
-            (demandedPosition < 0 ? 0 : maxRigthForBiggestSlider) : demandedPosition;
-        this.position = demandedPosition; 
-    }
-
-    calculateValidPositionForEachSlider(maxRight, idx) {
-        let individualPosition = (this.position < 0 || this.position > maxRight) ?
-            (this.position < 0 ? 0 : maxRight) : this.position;
-        this.individualPositions[idx] = individualPosition; 
-        return individualPosition;
-    }
-
-    changePosition(singleSliderPosition, singleSlider, singleSliderNode) {
-        singleSliderNode.current.style.left = -singleSliderPosition * singleSlider.shiftBy + '%';
-    }
-
-    secretelyChangePosition(dir, by, to){
-        let { sliders, settings } = this.context.propsClone;
-        let { sliderNodeRefs } = this.context.references;
-
-        if (by===false){
-            by = to - settings.maxFullScreen;
-            dir = 1;
-        } 
-
-        let sliceIndex = dir * by;
-        this.position = settings.maxFullScreen;
-        sliders.forEach((slider, idx) => {
-            this.changePosition(by, slider, sliderNodeRefs[idx]);
-            slider.validColumns = arrayOperations.columnsArrayRebuild(slider.validColumns, sliceIndex)
-            this.context.references.rootReference.setState({renderableColumns: slider.validColumns})
-        })
-
-    }
-
-    __beforeChange() {
+    __beforeChange(sliderNode) {
         let duration = this.context.propsClone.settings.duration;
-        this.context.references.sliderNodeRefs.forEach((node) => {
-            node.current.style.transition = `${duration}ms linear left`;
-        })
+        sliderNode.current.style.transition = `${duration}ms linear left`;
     }
 
     __afterChange() {
-        this.context.references.sliderNodeRefs.forEach((node) => {
-            node.current.style.transition = `0ms linear left`;
+        this.context.references.sliderNodeRefs.forEach((sliderNode)=>{
+            sliderNode.current.style.transition = `0ms linear left`;
         })
     }
 }

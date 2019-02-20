@@ -5,15 +5,17 @@ let sad = mockProps();
 let sad2 = mockProps();
 class App extends Component {
 
-  render() { console.log('asdasd')
+  render() { 
 
     let config = {
 
       settings: {
         duration: 300,
-        rows: 1,
+        rows: 0,
         navigators: true,
-        infinite: false,
+        infinite: true,
+        autoplay: true,
+        autoplayDuration: 6000
       },
 
       sliders: [{
@@ -22,6 +24,7 @@ class App extends Component {
       },{
         items: sad2,
         columns: 3,
+        columnNavi: true
       }]
     }
 
@@ -30,17 +33,9 @@ class App extends Component {
       <div style={{ margin: '0 auto', width: '70%' }}>
         
         <Carousel {...config} hoistMyContext ={ (x)=>this.cont=x } />
-        <button onClick={
-          ()=>this.goTo(4)
-        }>special</button>
+        
       </div>
     );
-  }
-
-
-
-  componentDidMount(){
-    //this.goTo = this.cont.actions.onColumnClick;
   }
 }
 

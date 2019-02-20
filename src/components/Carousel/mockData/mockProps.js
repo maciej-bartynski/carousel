@@ -7,7 +7,7 @@ export let mockProps = () => {
 
         let SomeComponentFromProvidedData = (props) => {
             let styles;
-            if (props.columnIndex === 0) {
+            if (props.columnIndex === 3) {
                 styles = {
                     width: '100%',
                     height: 240,
@@ -29,8 +29,13 @@ export let mockProps = () => {
                 }
             }
 
+            const dispatchClick = (e) => {
+                
+            }
+
             return (
                 <div
+                    onKeyUp={e=>dispatchClick(e)}
                     style={styles}
                     key={id}>
                     {item.title}
