@@ -54,30 +54,30 @@ const provider = WrapperComponent =>
         }
 
         componentWillMount() {
-            this.validateProps();
+            this.validateProps(this.props);
             this.setState({
                 propsClone: this.propsClone
             })
         }
 
-        componentWillReceiveProps(){
-            this.validateProps();
+        componentWillReceiveProps(nextProps){
+            this.validateProps(nextProps);
             this.setState({
                 propsClone: this.propsClone
             })
         }
 
-        validateProps() {
-            let { sliders, settings } = this.props;
+        validateProps(props) {
+            let { sliders, settings } = props;
             if (!settings || !sliders || sliders.length < 1 || sliders[0].items.length < 1) {
                 this.nothingToRender = true;
                 return;
             }
-            this.validatePropsSettings();
+            this.validatePropsSettings(props);
         }
 
-        validatePropsSettings() {
-            let { sliders, settings } = this.props;
+        validatePropsSettings(props) {
+            let { sliders, settings } = props;
 
             if (!settings || !sliders || sliders.length < 1 || sliders[0].length < 1) {
                 this.nothingToRender = true;
@@ -108,11 +108,11 @@ const provider = WrapperComponent =>
             this.propsClone.settings = settingsValidatedObject;
             this.stateClone.currentRootPosition = infinite ? this.propsClone.settings.leftOverflow : 0; 
 
-            this.validatePropsSliders();
+            this.validatePropsSliders(props);
         }
 
-        validatePropsSliders() {
-            let { sliders } = this.props;
+        validatePropsSliders(props) {
+            let { sliders } = props;
 
             this.propsClone.sliders = [];
             for (let i = 0; i < sliders.length; i++) {
